@@ -16,7 +16,7 @@ export default function ProjectSubmenu({ category, onClose }: ProjectSubmenuProp
     setVisibleItems([]);
     const timers: NodeJS.Timeout[] = [];
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 2; i++) {
       const timer = setTimeout(() => {
         setVisibleItems(prev => [...prev, i]);
       }, i * 100);
@@ -33,7 +33,7 @@ export default function ProjectSubmenu({ category, onClose }: ProjectSubmenuProp
     onClose();
   };
 
-  const projects = Array.from({ length: 5 }, (_, i) => ({
+  const projects = Array.from({ length: 2 }, (_, i) => ({
     id: i + 1,
     title: `Project ${i + 1}`,
     image: projectThumbnail,
