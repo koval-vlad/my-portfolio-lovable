@@ -1,27 +1,47 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import Header from './components/Header';
+import Home from './pages/Home';
+import TableauProject from './pages/TableauProject';
+import ReactProject from './pages/ReactProject';
+import DotNetProject from './pages/DotNetProject';
+import PythonProject from './pages/PythonProject';
+import EducationView from './pages/EducationView';
+import Resume from './pages/Resume';
 
-const queryClient = new QueryClient();
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+          <Header />
+          <Box component="main" sx={{ pt: 2 }}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/tableau/:id" element={<TableauProject />} />
+              <Route path="/react/:id" element={<ReactProject />} />
+              <Route path="/dotnet/:id" element={<DotNetProject />} />
+              <Route path="/python/:id" element={<PythonProject />} />
+              <Route path="/education/view" element={<EducationView />} />
+              <Route path="/resume" element={<Resume />} />
+            </Routes>
+          </Box>
+        </Box>
+      </Router>
+    </ThemeProvider>
+  );
+}
 
 export default App;
