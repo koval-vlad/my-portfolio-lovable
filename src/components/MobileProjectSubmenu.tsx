@@ -8,7 +8,7 @@ import {
   Fade,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import projectThumbnail from '@/assets/project-thumbnail.png';
+import projectThumbnail from '../assets/project-thumbnail.png';
 
 interface MobileProjectSubmenuProps {
   category: string;
