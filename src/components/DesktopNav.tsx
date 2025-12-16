@@ -27,11 +27,11 @@ export default function DesktopNav({ currentPath }: DesktopNavProps) {
   const isMenuOpen = (menuName: string) => Boolean(anchorEl[menuName]);
 
   const menuItems = [
-    { label: 'Home', path: '/', expandable: false },
-    { label: 'Tableau', path: '/tableau', expandable: true },
-    { label: '.NET', path: '/dotnet', expandable: true },
-    { label: 'Education', path: '/education/view', expandable: false },
-    { label: 'Resume', path: '/resume', expandable: true },
+    { label: 'Home', path: '/', expandable: false, category: '' },
+    { label: 'Tableau', path: '/tableau', expandable: true, category: 'tableau' },
+    { label: '.NET', path: '/dotnet', expandable: true, category: 'dotnet' },
+    { label: 'Education', path: '/education/view', expandable: false, category: '' },
+    { label: 'Resume', path: '/resume', expandable: true, category: '' },
   ];
 
   const isActive = (path: string) => {
@@ -106,7 +106,7 @@ export default function DesktopNav({ currentPath }: DesktopNavProps) {
               }}
             >
               <ProjectSubmenu
-                category={item.label.toLowerCase()}
+                category={item.category}
                 onClose={() => handleMenuClose(item.label)}
               />
             </Menu>
