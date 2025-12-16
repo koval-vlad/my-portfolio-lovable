@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Card, CardMedia, CardContent, Typography, Fade } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import projectThumbnail from '@/assets/project-thumbnail.png';
 
 interface ProjectSubmenuProps {
   category: string;
@@ -35,13 +36,7 @@ export default function ProjectSubmenu({ category, onClose }: ProjectSubmenuProp
   const projects = Array.from({ length: 5 }, (_, i) => ({
     id: i + 1,
     title: `Project ${i + 1}`,
-    image: `https://images.pexels.com/photos/${[
-      '1181671',
-      '546819',
-      '1181467',
-      '1089438',
-      '574071',
-    ][i]}/pexels-photo.jpeg?auto=compress&cs=tinysrgb&w=300&h=200`,
+    image: projectThumbnail,
   }));
 
   return (
