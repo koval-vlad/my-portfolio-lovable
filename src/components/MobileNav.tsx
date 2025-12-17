@@ -41,6 +41,7 @@ export default function MobileNav({ currentPath, onClose }: MobileNavProps) {
     { label: 'Home', path: '/', expandable: false, category: '' },
     { label: 'Tableau', path: '/tableau', expandable: true, category: 'tableau' },
     { label: '.NET', path: '/dotnet', expandable: true, category: 'dotnet' },
+    { label: 'VB', path: '/vb', expandable: true, category: 'vb' },
     { label: 'Education', path: '/education/view', expandable: false, category: '' },
     { label: 'Resume', path: '/resume', expandable: true, category: '' },
   ];
