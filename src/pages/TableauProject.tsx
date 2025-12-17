@@ -1,4 +1,4 @@
-import { Box, Typography, Container, Paper } from '@mui/material';
+import { Box, Typography, Paper } from '@mui/material';
 import { useParams } from 'react-router-dom';
 
 const projectData = [
@@ -13,21 +13,19 @@ export default function TableauProject() {
   const project = projectData.find(p => p.id === projectId) || projectData[0];
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Paper
-          elevation={2}
-          sx={{
-            p: 4,
-            borderRadius: '10px',
-            backgroundColor: '#fff',
-          }}
-        >
-          <Typography variant="h3" component="h1">
-            {project.label}
-          </Typography>
-        </Paper>
-      </Box>
-    </Container>
+    <Box sx={{ px: '8px', py: 2 }}>
+      <Paper
+        elevation={2}
+        sx={{
+          p: 4,
+          borderRadius: '10px',
+          backgroundColor: '#fff',
+        }}
+      >
+        <Typography variant="h3" component="h1">
+          {project.label}
+        </Typography>
+      </Paper>
+    </Box>
   );
 }
