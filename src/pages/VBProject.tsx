@@ -1,54 +1,23 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Container, Typography, Button, Paper } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-
-// VB images
-import vbPgcalcGiftWrap from '../assets/vb-pgcalc-gift-wrap.gif';
-import vbPgcalcDbManager from '../assets/vb-pgcalc-db-manager.gif';
+import { Box, Typography, Container } from '@mui/material';
+import { useParams } from 'react-router-dom';
 
 const projectData = [
-  { id: 1, title: 'GiftWrap', image: vbPgcalcGiftWrap },
-  { id: 2, title: 'Database Manager', image: vbPgcalcDbManager },
+  { id: 1, label: 'GiftWrap' },
+  { id: 2, label: 'Database Manager' },
 ];
 
 export default function VBProject() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const projectId = parseInt(id || '1', 10);
   const project = projectData.find(p => p.id === projectId) || projectData[0];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Button
-        startIcon={<ArrowBackIcon />}
-        onClick={() => navigate(-1)}
-        sx={{ mb: 3 }}
-      >
-        Back
-      </Button>
-      
-      <Paper sx={{ p: 4, borderRadius: 2 }}>
-        <Typography variant="h4" gutterBottom fontWeight={600}>
-          {project.title}
+    <Container maxWidth="lg">
+      <Box sx={{ py: 8 }}>
+        <Typography variant="h3" component="h1">
+          {project.label}
         </Typography>
-        
-        <Box
-          component="img"
-          src={project.image}
-          alt={project.title}
-          sx={{
-            width: '100%',
-            maxWidth: 800,
-            height: 'auto',
-            borderRadius: 2,
-            mt: 2,
-          }}
-        />
-        
-        <Typography variant="body1" sx={{ mt: 3 }}>
-          VB Project {projectId} details will be displayed here.
-        </Typography>
-      </Paper>
+      </Box>
     </Container>
   );
 }
