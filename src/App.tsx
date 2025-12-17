@@ -4,6 +4,7 @@ import Header from './components/Header';
 import Home from './pages/Home';
 import TableauProject from './pages/TableauProject';
 import DotNetProject from './pages/DotNetProject';
+import VBProject from './pages/VBProject';
 import EducationView from './pages/EducationView';
 import Resume from './pages/Resume';
 
@@ -30,6 +31,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/tableau/:id" element={<TableauProject />} />
               <Route path="/dotnet/:id" element={<DotNetProject />} />
+              <Route path="/vb/:id" element={<VBProject />} />
               <Route path="/education/view" element={<EducationView />} />
               <Route path="/resume" element={<Resume />} />
             </Routes>
