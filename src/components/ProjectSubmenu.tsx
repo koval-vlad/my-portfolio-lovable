@@ -63,7 +63,7 @@ export default function ProjectSubmenu({ category, onClose }: ProjectSubmenuProp
   const [visibleItems, setVisibleItems] = useState<number[]>([]);
 
   const projects = projectData[category] || [];
-  const columnCount = category === 'dotnet' ? 5 : 3;
+  const columnCount = category === 'dotnet' ? 5 : category === 'vb' ? 2 : 3;
 
   useEffect(() => {
     setVisibleItems([]);
@@ -93,7 +93,7 @@ export default function ProjectSubmenu({ category, onClose }: ProjectSubmenuProp
         gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
         gap: 2,
         p: 2,
-        maxWidth: category === 'dotnet' ? 1200 : 700,
+        maxWidth: category === 'dotnet' ? 1200 : category === 'vb' ? 450 : 700,
       }}
     >
       {projects.map((project, index) => (
