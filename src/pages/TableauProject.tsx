@@ -1,30 +1,65 @@
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 
-const projectData = [
-  { id: 1, label: 'Modern HR Dashboard' },
-  { id: 2, label: 'HR Analytics Dashboard' },
-  { id: 3, label: 'Titanic Survivor Story' },
-];
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'tableau-viz': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        id?: string;
+        src?: string;
+        width?: string;
+        height?: string;
+        toolbar?: string;
+        'hide-tabs'?: boolean;
+      };
+    }
+  }
+}
 
 export default function TableauProject() {
   const { id } = useParams<{ id: string }>();
   const projectId = parseInt(id || '1', 10);
-  const project = projectData.find(p => p.id === projectId) || projectData[0];
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js';
+    script.type = 'module';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const renderContent = () => {
+    if (projectId === 1) {
+      return (
+        <tableau-viz
+          id="tableauViz"
+          src="https://public.tableau.com/views/ModernHRDashboard_17655530147630/HRDashboard?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link"
+          width="100%"
+          height="800px"
+          toolbar="bottom"
+          hide-tabs
+        ></tableau-viz>
+      );
+    }
+    return null;
+  };
 
   return (
     <Box sx={{ px: '8px', py: 2 }}>
       <Paper
         elevation={2}
         sx={{
-          p: 4,
+          p: 2,
           borderRadius: '10px',
           backgroundColor: '#fff',
         }}
       >
-        <Typography variant="h3" component="h1">
-          {project.label}
-        </Typography>
+        {renderContent()}
       </Paper>
     </Box>
   );
