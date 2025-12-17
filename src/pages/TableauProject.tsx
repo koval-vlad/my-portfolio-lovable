@@ -46,6 +46,30 @@ export default function TableauProject() {
         ></tableau-viz>
       );
     }
+    if (projectId === 2) {
+      return (
+        <tableau-viz
+          id="tableauViz"
+          src="https://public.tableau.com/views/HRDashboard_17648789734670/HRDashboard?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link"
+          width="100%"
+          height="800px"
+          toolbar="bottom"
+          hide-tabs
+        ></tableau-viz>
+      );
+    }
+    if (projectId === 3) {
+      return (
+        <tableau-viz
+          id="tableauViz"
+          src="https://public.tableau.com/shared/D5J3ZZ2CH?:display_count=n&:origin=viz_share_link"
+          width="100%"
+          height="800px"
+          toolbar="bottom"
+          hide-tabs
+        ></tableau-viz>
+      );
+    }
     return null;
   };
 
