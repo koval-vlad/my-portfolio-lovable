@@ -1,9 +1,16 @@
-import { Box, Typography, Container } from '@mui/material';
+import { Box, Typography, Paper } from '@mui/material';
 
 export default function Home() {
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 8 }}>
+    <Box sx={{ px: '8px', py: 2 }}>
+      <Paper
+        elevation={2}
+        sx={{
+          p: 4,
+          borderRadius: '10px',
+          backgroundColor: '#fff',
+        }}
+      >
         <Typography variant="h2" component="h1" gutterBottom>
           Welcome to My Portfolio
         </Typography>
@@ -14,7 +21,7 @@ export default function Home() {
           This is a professional portfolio application demonstrating full-stack development capabilities.
           Use the navigation menu above to explore different sections of my work.
         </Typography>
-      </Box>
-    </Container>
+      </Paper>
+    </Box>
   );
 }
