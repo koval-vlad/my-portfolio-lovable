@@ -93,7 +93,7 @@ export default function ProjectSubmenu({ category, onClose }: ProjectSubmenuProp
         gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
         gap: 2,
         p: 2,
-        maxWidth: category === 'dotnet' ? 1200 : category === 'vb' ? 450 : 700,
+        maxWidth: category === 'dotnet' ? 1200 : category === 'vb' ? 470 : 700,
       }}
     >
       {projects.map((project, index) => (
