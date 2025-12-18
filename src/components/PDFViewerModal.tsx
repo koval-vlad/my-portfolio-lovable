@@ -58,9 +58,9 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
           </IconButton>
         </Box>
         <Box sx={{ flex: 1, overflow: 'hidden' }}>
-          <iframe
-            src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-            title={title}
+          <embed
+            src={pdfUrl}
+            type="application/pdf"
             width="100%"
             height="100%"
             style={{ border: 'none' }}
