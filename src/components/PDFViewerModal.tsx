@@ -7,6 +7,7 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import DownloadIcon from '@mui/icons-material/Download';
 import PrintIcon from '@mui/icons-material/Print';
+import SlideshowIcon from '@mui/icons-material/Slideshow';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -56,11 +57,32 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
   };
 
   const handlePrint = () => {
-    const printWindow = window.open(pdfUrl, '_blank');
-    if (printWindow) {
-      printWindow.addEventListener('load', () => {
-        printWindow.print();
-      });
+    // Create a hidden iframe for printing
+    const printFrame = document.createElement('iframe');
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    printFrame.style.border = 'none';
+    printFrame.src = pdfUrl;
+    document.body.appendChild(printFrame);
+    
+    printFrame.onload = () => {
+      setTimeout(() => {
+        printFrame.contentWindow?.print();
+        setTimeout(() => {
+          document.body.removeChild(printFrame);
+        }, 1000);
+      }, 500);
+    };
+  };
+
+  const handlePresentation = () => {
+    // Open PDF in new tab for fullscreen presentation
+    const newWindow = window.open(pdfUrl, '_blank');
+    if (newWindow) {
+      newWindow.focus();
     }
   };
 
@@ -133,6 +155,9 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
 
           {/* Right controls - Actions */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton onClick={handlePresentation} size="small" title="Present">
+              <SlideshowIcon />
+            </IconButton>
             <IconButton onClick={handleDownload} size="small" title="Download">
               <DownloadIcon />
             </IconButton>
