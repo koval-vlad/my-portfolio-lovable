@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Box, IconButton, Modal, Paper, Typography, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
@@ -8,6 +8,9 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import DownloadIcon from '@mui/icons-material/Download';
 import PrintIcon from '@mui/icons-material/Print';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -26,6 +29,8 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isPresenting, setIsPresenting] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -33,13 +38,13 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
     setLoading(false);
   };
 
-  const goToPrevPage = () => {
+  const goToPrevPage = useCallback(() => {
     setPageNumber((prev) => Math.max(prev - 1, 1));
-  };
+  }, []);
 
-  const goToNextPage = () => {
+  const goToNextPage = useCallback(() => {
     setPageNumber((prev) => Math.min(prev + 1, numPages));
-  };
+  }, [numPages]);
 
   const zoomIn = () => {
     setScale((prev) => Math.min(prev + 0.2, 3.0));
@@ -57,7 +62,6 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
   };
 
   const handlePrint = () => {
-    // Print using the rendered canvas from react-pdf
     const canvas = document.querySelector('.react-pdf__Page__canvas') as HTMLCanvasElement;
     if (canvas) {
       const dataUrl = canvas.toDataURL('image/png');
@@ -96,17 +100,88 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
   };
 
   const handlePresentation = () => {
-    // Use Fullscreen API on the modal content
     const modalContent = document.querySelector('.pdf-modal-content') as HTMLElement;
     if (modalContent && modalContent.requestFullscreen) {
       modalContent.requestFullscreen();
+      setIsPresenting(true);
+      setIsPlaying(true);
+      setScale(1.5);
     }
   };
+
+  const handleExitPresentation = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+    setIsPresenting(false);
+    setIsPlaying(false);
+    setScale(1.0);
+  };
+
+  const togglePlayPause = () => {
+    setIsPlaying((prev) => !prev);
+  };
+
+  // Auto-advance slides when playing
+  useEffect(() => {
+    if (isPlaying && isPresenting) {
+      const interval = setInterval(() => {
+        setPageNumber((prev) => {
+          if (prev >= numPages) {
+            setIsPlaying(false);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 5000); // 5 seconds per slide
+      return () => clearInterval(interval);
+    }
+  }, [isPlaying, isPresenting, numPages]);
+
+  // Listen for fullscreen exit
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && isPresenting) {
+        setIsPresenting(false);
+        setIsPlaying(false);
+        setScale(1.0);
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [isPresenting]);
+
+  // Keyboard controls for presentation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!open) return;
+      switch (e.key) {
+        case 'ArrowRight':
+        case ' ':
+          e.preventDefault();
+          goToNextPage();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          goToPrevPage();
+          break;
+        case 'Escape':
+          if (isPresenting) {
+            handleExitPresentation();
+          }
+          break;
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, isPresenting, goToNextPage, goToPrevPage]);
 
   const handleClose = () => {
     setPageNumber(1);
     setScale(1.0);
     setLoading(true);
+    setIsPresenting(false);
+    setIsPlaying(false);
     onClose();
   };
 
@@ -167,28 +242,47 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
             </IconButton>
           </Box>
 
-          {/* Center controls - Zoom */}
+          {/* Center controls - Zoom or Presentation controls */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={zoomOut} size="small">
-              <ZoomOutIcon />
-            </IconButton>
-            <Typography variant="body2">{Math.round(scale * 100)}%</Typography>
-            <IconButton onClick={zoomIn} size="small">
-              <ZoomInIcon />
-            </IconButton>
+            {isPresenting ? (
+              <>
+                <IconButton onClick={togglePlayPause} size="small" title={isPlaying ? 'Pause' : 'Play'}>
+                  {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+                </IconButton>
+                <Typography variant="body2">{isPlaying ? 'Playing (5s)' : 'Paused'}</Typography>
+              </>
+            ) : (
+              <>
+                <IconButton onClick={zoomOut} size="small">
+                  <ZoomOutIcon />
+                </IconButton>
+                <Typography variant="body2">{Math.round(scale * 100)}%</Typography>
+                <IconButton onClick={zoomIn} size="small">
+                  <ZoomInIcon />
+                </IconButton>
+              </>
+            )}
           </Box>
 
           {/* Right controls - Actions */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={handlePresentation} size="small" title="Present">
-              <SlideshowIcon />
-            </IconButton>
-            <IconButton onClick={handleDownload} size="small" title="Download">
-              <DownloadIcon />
-            </IconButton>
-            <IconButton onClick={handlePrint} size="small" title="Print">
-              <PrintIcon />
-            </IconButton>
+            {isPresenting ? (
+              <IconButton onClick={handleExitPresentation} size="small" title="Exit Presentation">
+                <FullscreenExitIcon />
+              </IconButton>
+            ) : (
+              <>
+                <IconButton onClick={handlePresentation} size="small" title="Present">
+                  <SlideshowIcon />
+                </IconButton>
+                <IconButton onClick={handleDownload} size="small" title="Download">
+                  <DownloadIcon />
+                </IconButton>
+                <IconButton onClick={handlePrint} size="small" title="Print">
+                  <PrintIcon />
+                </IconButton>
+              </>
+            )}
             <IconButton onClick={handleClose} size="small" title="Close">
               <CloseIcon />
             </IconButton>
@@ -202,7 +296,7 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
             overflow: 'auto',
             display: 'flex',
             justifyContent: 'center',
-            alignItems: 'flex-start',
+            alignItems: isPresenting ? 'center' : 'flex-start',
             backgroundColor: '#525659',
             p: 2,
           }}
