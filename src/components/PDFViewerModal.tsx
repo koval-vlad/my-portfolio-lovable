@@ -57,32 +57,49 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
   };
 
   const handlePrint = () => {
-    // Create a hidden iframe for printing
-    const printFrame = document.createElement('iframe');
-    printFrame.style.position = 'fixed';
-    printFrame.style.right = '0';
-    printFrame.style.bottom = '0';
-    printFrame.style.width = '0';
-    printFrame.style.height = '0';
-    printFrame.style.border = 'none';
-    printFrame.src = pdfUrl;
-    document.body.appendChild(printFrame);
-    
-    printFrame.onload = () => {
-      setTimeout(() => {
-        printFrame.contentWindow?.print();
+    // Print using the rendered canvas from react-pdf
+    const canvas = document.querySelector('.react-pdf__Page__canvas') as HTMLCanvasElement;
+    if (canvas) {
+      const dataUrl = canvas.toDataURL('image/png');
+      const printWindow = document.createElement('div');
+      printWindow.innerHTML = `
+        <html>
+          <head>
+            <title>Print PDF</title>
+            <style>
+              @media print {
+                body { margin: 0; }
+                img { max-width: 100%; height: auto; }
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${dataUrl}" />
+          </body>
+        </html>
+      `;
+      const printFrame = document.createElement('iframe');
+      printFrame.style.position = 'absolute';
+      printFrame.style.top = '-9999px';
+      document.body.appendChild(printFrame);
+      const frameDoc = printFrame.contentDocument || printFrame.contentWindow?.document;
+      if (frameDoc) {
+        frameDoc.open();
+        frameDoc.write(printWindow.innerHTML);
+        frameDoc.close();
         setTimeout(() => {
-          document.body.removeChild(printFrame);
-        }, 1000);
-      }, 500);
-    };
+          printFrame.contentWindow?.print();
+          setTimeout(() => document.body.removeChild(printFrame), 1000);
+        }, 250);
+      }
+    }
   };
 
   const handlePresentation = () => {
-    // Open PDF in new tab for fullscreen presentation
-    const newWindow = window.open(pdfUrl, '_blank');
-    if (newWindow) {
-      newWindow.focus();
+    // Use Fullscreen API on the modal content
+    const modalContent = document.querySelector('.pdf-modal-content') as HTMLElement;
+    if (modalContent && modalContent.requestFullscreen) {
+      modalContent.requestFullscreen();
     }
   };
 
@@ -105,6 +122,7 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
       }}
     >
       <Paper
+        className="pdf-modal-content"
         elevation={8}
         sx={{
           width: '90%',
@@ -116,6 +134,13 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
           flexDirection: 'column',
           borderRadius: '10px',
           overflow: 'hidden',
+          '&:fullscreen': {
+            width: '100%',
+            height: '100%',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            borderRadius: 0,
+          },
         }}
       >
         {/* Toolbar */}
