@@ -1,5 +1,9 @@
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Typography, Paper, Button } from '@mui/material';
 import { useParams } from 'react-router-dom';
+import { useState } from 'react';
+import SlideshowIcon from '@mui/icons-material/Slideshow';
+import PDFViewerModal from '../components/PDFViewerModal';
+import hurricanePdf from '../assets/Hurricane-Presentation.pdf';
 
 const projectData = [
   { id: 1, label: 'Dynamo Software' },
@@ -18,6 +22,7 @@ export default function DotNetProject() {
   const { id } = useParams<{ id: string }>();
   const projectId = parseInt(id || '1', 10);
   const project = projectData.find(p => p.id === projectId) || projectData[0];
+  const [pdfOpen, setPdfOpen] = useState(false);
 
   return (
     <Box sx={{ px: '8px', py: 2 }}>
@@ -32,6 +37,32 @@ export default function DotNetProject() {
         <Typography variant="h3" component="h1">
           {project.label}
         </Typography>
+        
+        {projectId === 10 && (
+          <>
+            <Box sx={{ mt: 3 }}>
+              <Button
+                variant="contained"
+                startIcon={<SlideshowIcon />}
+                onClick={() => setPdfOpen(true)}
+                sx={{
+                  backgroundColor: '#1976d2',
+                  '&:hover': {
+                    backgroundColor: '#1565c0',
+                  },
+                }}
+              >
+                View Presentation
+              </Button>
+            </Box>
+            <PDFViewerModal
+              open={pdfOpen}
+              onClose={() => setPdfOpen(false)}
+              pdfUrl={hurricanePdf}
+              title="Hurricane Presentation"
+            />
+          </>
+        )}
       </Paper>
     </Box>
   );
