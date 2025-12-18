@@ -61,41 +61,57 @@ export default function PDFViewerModal({ open, onClose, pdfUrl, title = 'PDF Vie
     link.click();
   };
 
-  const handlePrint = () => {
-    const canvas = document.querySelector('.react-pdf__Page__canvas') as HTMLCanvasElement;
-    if (canvas) {
-      const dataUrl = canvas.toDataURL('image/png');
-      const printWindow = document.createElement('div');
-      printWindow.innerHTML = `
+  const handlePrint = async () => {
+    // Try to fetch the PDF as a blob, open a new window with an embedded PDF
+    // and trigger print immediately. Opening the new window from the click
+    // preserves the user gesture which many browsers require for print().
+    try {
+      const resp = await fetch(pdfUrl);
+      if (!resp.ok) throw new Error('Failed to fetch PDF');
+      const blob = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const newWin = window.open('', '_blank');
+      if (!newWin) {
+        // Pop-up blocked — fallback to opening PDF directly
+        window.open(pdfUrl, '_blank');
+        return;
+      }
+
+      const html = `
+        <!doctype html>
         <html>
           <head>
             <title>Print PDF</title>
-            <style>
-              @media print {
-                body { margin: 0; }
-                img { max-width: 100%; height: auto; }
-              }
-            </style>
+            <style>html,body{height:100%;margin:0}embed{width:100%;height:100%;}</style>
           </head>
           <body>
-            <img src="${dataUrl}" />
+            <embed id="pdfEmbed" src="${blobUrl}" type="application/pdf"></embed>
+            <script>
+              (function(){
+                var emb = document.getElementById('pdfEmbed');
+                function doPrint(){
+                  try{ window.focus(); window.print(); }catch(e){}
+                }
+                // Try to print when embed has loaded, otherwise onload of window
+                if(emb){ emb.onload = function(){ setTimeout(doPrint, 200); }; }
+                window.onload = function(){ setTimeout(doPrint, 300); };
+                window.onafterprint = function(){
+                  try{ URL.revokeObjectURL('${blobUrl}'); }catch(e){}
+                  setTimeout(function(){ window.close(); }, 500);
+                };
+              })();
+            </script>
           </body>
         </html>
       `;
-      const printFrame = document.createElement('iframe');
-      printFrame.style.position = 'absolute';
-      printFrame.style.top = '-9999px';
-      document.body.appendChild(printFrame);
-      const frameDoc = printFrame.contentDocument || printFrame.contentWindow?.document;
-      if (frameDoc) {
-        frameDoc.open();
-        frameDoc.write(printWindow.innerHTML);
-        frameDoc.close();
-        setTimeout(() => {
-          printFrame.contentWindow?.print();
-          setTimeout(() => document.body.removeChild(printFrame), 1000);
-        }, 250);
-      }
+
+      newWin.document.open();
+      newWin.document.write(html);
+      newWin.document.close();
+    } catch (err) {
+      // Final fallback: open PDF in new tab so user can print manually
+      window.open(pdfUrl, '_blank');
     }
   };
 
