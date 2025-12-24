@@ -19,8 +19,6 @@ interface SVGSpriteViewerModalProps {
   pdfUrl: string; // For download
   title?: string;
   slidePrefix?: string; // e.g., "icon-Slide"
-  slideCount: number;
-  startIndex?: number; // Default 1
 }
 
 export default function SVGSpriteViewerModal({
@@ -30,20 +28,18 @@ export default function SVGSpriteViewerModal({
   pdfUrl,
   title = 'Presentation',
   slidePrefix = 'icon-Slide',
-  slideCount,
-  startIndex = 1,
 }: SVGSpriteViewerModalProps) {
-  const [pageNumber, setPageNumber] = useState<number>(startIndex);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
   const [scale, setScale] = useState<number>(1.0);
   const [isPresenting, setIsPresenting] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [svgContent, setSvgContent] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
+  const [slideIds, setSlideIds] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
 
-  const numPages = slideCount;
-  const endIndex = startIndex + slideCount - 1;
+  const numPages = slideIds.length;
 
   // Fetch and parse SVG sprite
   useEffect(() => {
@@ -53,6 +49,23 @@ export default function SVGSpriteViewerModal({
         .then((res) => res.text())
         .then((text) => {
           setSvgContent(text);
+          
+          // Parse and find all slide symbols
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, 'image/svg+xml');
+          const symbols = doc.querySelectorAll('symbol');
+          const ids = Array.from(symbols)
+            .map(s => s.id)
+            .filter(id => id.startsWith(slidePrefix))
+            .sort((a, b) => {
+              const numA = parseInt(a.replace(slidePrefix, ''), 10);
+              const numB = parseInt(b.replace(slidePrefix, ''), 10);
+              return numA - numB;
+            });
+          
+          console.log('Found slide IDs:', ids);
+          setSlideIds(ids);
+          setCurrentSlideIndex(0);
           setLoading(false);
         })
         .catch((err) => {
@@ -60,13 +73,15 @@ export default function SVGSpriteViewerModal({
           setLoading(false);
         });
     }
-  }, [open, svgUrl]);
+  }, [open, svgUrl, slidePrefix]);
 
   // Extract specific symbol from SVG content
   const getSlideContent = useCallback(() => {
-    if (!svgContent) return null;
+    if (!svgContent || slideIds.length === 0) return null;
     
-    const currentSlideId = `${slidePrefix}${pageNumber}`;
+    const currentSlideId = slideIds[currentSlideIndex];
+    if (!currentSlideId) return null;
+    
     const parser = new DOMParser();
     const doc = parser.parseFromString(svgContent, 'image/svg+xml');
     const symbol = doc.getElementById(currentSlideId);
@@ -80,15 +95,15 @@ export default function SVGSpriteViewerModal({
     const innerContent = symbol.innerHTML;
     
     return { viewBox, innerContent };
-  }, [svgContent, slidePrefix, pageNumber]);
+  }, [svgContent, slideIds, currentSlideIndex]);
 
   const goToPrevPage = useCallback(() => {
-    setPageNumber((prev) => Math.max(prev - 1, startIndex));
-  }, [startIndex]);
+    setCurrentSlideIndex((prev) => Math.max(prev - 1, 0));
+  }, []);
 
   const goToNextPage = useCallback(() => {
-    setPageNumber((prev) => Math.min(prev + 1, endIndex));
-  }, [endIndex]);
+    setCurrentSlideIndex((prev) => Math.min(prev + 1, numPages - 1));
+  }, [numPages]);
 
   const zoomIn = () => {
     setScale((prev) => Math.min(prev + 0.2, 3.0));
@@ -178,8 +193,8 @@ export default function SVGSpriteViewerModal({
   useEffect(() => {
     if (isPlaying && isPresenting) {
       const interval = setInterval(() => {
-        setPageNumber((prev) => {
-          if (prev >= endIndex) {
+        setCurrentSlideIndex((prev) => {
+          if (prev >= numPages - 1) {
             setIsPlaying(false);
             return prev;
           }
@@ -188,7 +203,7 @@ export default function SVGSpriteViewerModal({
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [isPlaying, isPresenting, endIndex]);
+  }, [isPlaying, isPresenting, numPages]);
 
   // Listen for fullscreen exit
   useEffect(() => {
@@ -228,14 +243,14 @@ export default function SVGSpriteViewerModal({
   }, [open, isPresenting, goToNextPage, goToPrevPage]);
 
   const handleClose = () => {
-    setPageNumber(startIndex);
+    setCurrentSlideIndex(0);
     setScale(1.0);
     setIsPresenting(false);
     setIsPlaying(false);
     onClose();
   };
 
-  const displayPageNumber = pageNumber - startIndex + 1;
+  const displayPageNumber = currentSlideIndex + 1;
 
   return (
     <Modal
@@ -284,13 +299,13 @@ export default function SVGSpriteViewerModal({
         >
           {/* Left controls - Navigation */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={goToPrevPage} disabled={pageNumber <= startIndex} size="small">
+            <IconButton onClick={goToPrevPage} disabled={currentSlideIndex <= 0} size="small">
               <NavigateBeforeIcon />
             </IconButton>
             <Typography variant="body2">
               {displayPageNumber} / {numPages}
             </Typography>
-            <IconButton onClick={goToNextPage} disabled={pageNumber >= endIndex} size="small">
+            <IconButton onClick={goToNextPage} disabled={currentSlideIndex >= numPages - 1} size="small">
               <NavigateNextIcon />
             </IconButton>
           </Box>

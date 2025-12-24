@@ -61,8 +61,6 @@ export default function DotNetProject() {
               pdfUrl={hurricanePdf}
               title="Hurricane Presentation"
               slidePrefix="icon-Slide"
-              slideCount={14}
-              startIndex={1}
             />
           </>
         )}

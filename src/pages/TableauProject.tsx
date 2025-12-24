@@ -68,8 +68,6 @@ export default function TableauProject() {
             pdfUrl={hrDashboardPdf}
             title="HR Dashboard Presentation"
             slidePrefix="icon-Slide"
-            slideCount={12}
-            startIndex={1}
           />
         </>
       );
