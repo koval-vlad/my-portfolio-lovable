@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { useState } from 'react';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
 import SVGSpriteViewerModal from '../components/SVGSpriteViewerModal';
-import hurricaneSvg from '../assets/hurricane-presentation-icons.svg';
 import hurricanePdf from '../assets/Hurricane-Presentation.pdf';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -40,9 +39,13 @@ export default function DotNetProject() {
         <Typography variant="h3" component="h1">
           {project.label}
         </Typography>
-        
+
         {projectId === 10 && (
           <>
+            <Typography variant="body1" sx={{ mt: 2, mb: 3 }}>
+              A comprehensive reporting system for tracking and analyzing hurricane data,
+              providing detailed analytics and visualizations for risk assessment and emergency planning.
+            </Typography>
             <Box sx={{ mt: 3 }}>
               <Button
                 variant="outlined"
@@ -57,10 +60,10 @@ export default function DotNetProject() {
             <SVGSpriteViewerModal
               open={presentationOpen}
               onClose={() => setPresentationOpen(false)}
-              svgUrl={hurricaneSvg}
               pdfUrl={hurricanePdf}
               title="Hurricane Presentation"
-              slidePrefix="icon-Slide"
+              slideDirectory="/images/hurricane-presentation"
+              slideCount={28}
             />
           </>
         )}

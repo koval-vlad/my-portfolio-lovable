@@ -1,24 +1,25 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, IconButton, Modal, Paper, Typography } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import { useState, useEffect, useCallback } from 'react';
+import { Modal, Paper, Typography, Button, Box, IconButton, CircularProgress } from '@mui/material';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import DownloadIcon from '@mui/icons-material/Download';
-import PrintIcon from '@mui/icons-material/Print';
-import SlideshowIcon from '@mui/icons-material/Slideshow';
+import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
-import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import SlideshowIcon from '@mui/icons-material/Slideshow';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import PrintIcon from '@mui/icons-material/Print';
+import DownloadIcon from '@mui/icons-material/Download';
 
 interface SVGSpriteViewerModalProps {
   open: boolean;
   onClose: () => void;
-  svgUrl: string;
+  svgUrl?: string; // For backwards compatibility with sprite files
   pdfUrl: string; // For download
   title?: string;
   slidePrefix?: string; // e.g., "icon-Slide"
+  slideDirectory?: string; // Directory containing individual slide files
+  slideCount?: number; // Number of slides
 }
 
 export default function SVGSpriteViewerModal({
@@ -28,159 +29,123 @@ export default function SVGSpriteViewerModal({
   pdfUrl,
   title = 'Presentation',
   slidePrefix = 'icon-Slide',
+  slideDirectory,
+  slideCount,
 }: SVGSpriteViewerModalProps) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
-  const [scale, setScale] = useState<number>(1.0);
+  const [currentSlideContent, setCurrentSlideContent] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const [isPresenting, setIsPresenting] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [svgContent, setSvgContent] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
-  const [slideIds, setSlideIds] = useState<string[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const svgContainerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState<number>(1.0);
 
-  const numPages = slideIds.length;
+  // Load individual slide file
+  const loadSlide = useCallback(async (slideNumber: number) => {
+    if (!slideDirectory) return;
 
-  // Fetch and parse SVG sprite
-  useEffect(() => {
-    if (open && svgUrl) {
-      setLoading(true);
-      fetch(svgUrl)
-        .then((res) => res.text())
-        .then((text) => {
-          setSvgContent(text);
-          
-          // Parse and find all slide symbols
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(text, 'image/svg+xml');
-          const symbols = doc.querySelectorAll('symbol');
-          const ids = Array.from(symbols)
-            .map(s => s.id)
-            .filter(id => id.startsWith(slidePrefix))
-            .sort((a, b) => {
-              const numA = parseInt(a.replace(slidePrefix, ''), 10);
-              const numB = parseInt(b.replace(slidePrefix, ''), 10);
-              return numA - numB;
-            });
-          
-          console.log('Found slide IDs:', ids);
-          setSlideIds(ids);
-          setCurrentSlideIndex(0);
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error('Failed to load SVG sprite:', err);
-          setLoading(false);
-        });
+    setLoading(true);
+    try {
+      const slideUrl = `${slideDirectory}/Slide${slideNumber}.SVG`;
+      console.log('Loading slide:', slideUrl);
+
+      const response = await fetch(slideUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to load slide ${slideNumber}: ${response.status}`);
+      }
+
+      const svgContent = await response.text();
+      setCurrentSlideContent(svgContent);
+      console.log('Loaded slide', slideNumber, 'content length:', svgContent.length);
+    } catch (error) {
+      console.error('Error loading slide', slideNumber, ':', error);
+      setCurrentSlideContent(`<div style="color: red; padding: 20px; text-align: center;">Error loading slide ${slideNumber}</div>`);
+    } finally {
+      setLoading(false);
     }
-  }, [open, svgUrl, slidePrefix]);
+  }, [slideDirectory]);
 
-  // Extract specific symbol from SVG content
-  const getSlideContent = useCallback(() => {
-    if (!svgContent || slideIds.length === 0) return null;
-    
-    const currentSlideId = slideIds[currentSlideIndex];
-    if (!currentSlideId) return null;
-    
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgContent, 'image/svg+xml');
-    const symbol = doc.getElementById(currentSlideId);
-    
-    if (!symbol) return null;
-    
-    // Get the viewBox from the symbol
-    const viewBox = symbol.getAttribute('viewBox') || '0 0 1280 720';
-    
-    // Get the inner content of the symbol
-    const innerContent = symbol.innerHTML;
-    
-    return { viewBox, innerContent };
-  }, [svgContent, slideIds, currentSlideIndex]);
+  // Load slide when modal opens or slide index changes
+  useEffect(() => {
+    if (open && slideDirectory && slideCount && slideCount > 0) {
+      const slideNumber = currentSlideIndex + 1; // slides are 1-indexed in filenames
+      loadSlide(slideNumber);
+    }
+  }, [open, currentSlideIndex, slideDirectory, slideCount, loadSlide]);
 
-  const goToPrevPage = useCallback(() => {
-    setCurrentSlideIndex((prev) => Math.max(prev - 1, 0));
-  }, []);
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setCurrentSlideIndex(0);
+      setCurrentSlideContent('');
+      setLoading(false);
+      setIsPresenting(false);
+      setIsPlaying(false);
+      setScale(1.0);
+    }
+  }, [open]);
 
-  const goToNextPage = useCallback(() => {
-    setCurrentSlideIndex((prev) => Math.min(prev + 1, numPages - 1));
-  }, [numPages]);
+  // Auto-advance slides during presentation
+  useEffect(() => {
+    if (isPlaying && isPresenting && slideCount) {
+      const interval = setInterval(() => {
+        setCurrentSlideIndex((prev) => {
+          if (prev >= slideCount - 1) {
+            // Stop at the last slide
+            setIsPlaying(false);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 10000); // 10 seconds
 
-  const zoomIn = () => {
-    setScale((prev) => Math.min(prev + 0.2, 3.0));
+      return () => clearInterval(interval);
+    }
+  }, [isPlaying, isPresenting, slideCount]);
+
+  const goToPrevSlide = () => {
+    if (currentSlideIndex > 0) {
+      setCurrentSlideIndex(currentSlideIndex - 1);
+    }
   };
 
-  const zoomOut = () => {
-    setScale((prev) => Math.max(prev - 0.2, 0.5));
+  const goToNextSlide = () => {
+    if (slideCount && currentSlideIndex < slideCount - 1) {
+      setCurrentSlideIndex(currentSlideIndex + 1);
+    }
   };
 
   const handleDownload = () => {
     const link = document.createElement('a');
     link.href = pdfUrl;
-    link.download = title || 'document.pdf';
+    link.download = title || 'presentation.pdf';
     link.click();
   };
 
   const handlePrint = () => {
-    const svgContainer = svgContainerRef.current;
-    if (!svgContainer) return;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Please allow popups to print');
-      return;
-    }
-
-    const svgContent = svgContainer.innerHTML;
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Print ${title}</title>
-          <style>
-            body { 
-              margin: 0; 
-              padding: 20px; 
-              display: flex; 
-              justify-content: center; 
-              align-items: center; 
-              min-height: 100vh;
-            }
-            svg { 
-              max-width: 100%; 
-              max-height: 100vh; 
-            }
-          </style>
-        </head>
-        <body>
-          ${svgContent}
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                window.onafterprint = function() { window.close(); };
-              }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
-  const handlePresentation = () => {
-    const modalContent = document.querySelector('.svg-modal-content') as HTMLElement;
-    if (modalContent && modalContent.requestFullscreen) {
-      modalContent.requestFullscreen();
-      setIsPresenting(true);
-      setIsPlaying(true);
+    // Open PDF in new window for printing
+    const printWindow = window.open(pdfUrl, '_blank');
+    if (printWindow) {
+      // Wait for PDF to load, then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 1000); // Give PDF time to load
+      };
+    } else {
+      // Fallback: open PDF directly if popup blocked
+      window.open(pdfUrl, '_blank');
+      alert('Please use your browser\'s print function to print the PDF.');
     }
   };
 
-  const handleExitPresentation = () => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    }
+  const startPresentation = () => {
+    setIsPresenting(true);
+    setIsPlaying(true);
+    // Go to first slide when starting presentation
+    setCurrentSlideIndex(0);
+  };
+
+  const stopPresentation = () => {
     setIsPresenting(false);
     setIsPlaying(false);
   };
@@ -189,74 +154,21 @@ export default function SVGSpriteViewerModal({
     setIsPlaying((prev) => !prev);
   };
 
-  // Auto-advance slides when playing
-  useEffect(() => {
-    if (isPlaying && isPresenting) {
-      const interval = setInterval(() => {
-        setCurrentSlideIndex((prev) => {
-          if (prev >= numPages - 1) {
-            setIsPlaying(false);
-            return prev;
-          }
-          return prev + 1;
-        });
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [isPlaying, isPresenting, numPages]);
+  const zoomIn = () => {
+    setScale((prev) => Math.min(prev + 0.25, 3.0)); // Max zoom 300%
+  };
 
-  // Listen for fullscreen exit
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && isPresenting) {
-        setIsPresenting(false);
-        setIsPlaying(false);
-      }
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, [isPresenting]);
-
-  // Keyboard controls
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!open) return;
-      switch (e.key) {
-        case 'ArrowRight':
-        case ' ':
-          e.preventDefault();
-          goToNextPage();
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          goToPrevPage();
-          break;
-        case 'Escape':
-          if (isPresenting) {
-            handleExitPresentation();
-          }
-          break;
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [open, isPresenting, goToNextPage, goToPrevPage]);
-
-  const handleClose = () => {
-    setCurrentSlideIndex(0);
-    setScale(1.0);
-    setIsPresenting(false);
-    setIsPlaying(false);
-    onClose();
+  const zoomOut = () => {
+    setScale((prev) => Math.max(prev - 0.25, 0.5)); // Min zoom 50%
   };
 
   const displayPageNumber = currentSlideIndex + 1;
+  const totalSlides = slideCount || 0;
 
   return (
     <Modal
       open={open}
-      onClose={handleClose}
-      aria-labelledby={title}
+      onClose={onClose}
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -264,153 +176,137 @@ export default function SVGSpriteViewerModal({
       }}
     >
       <Paper
-        className="svg-modal-content"
-        elevation={8}
-        ref={containerRef}
         sx={{
-          width: '90%',
-          height: '90%',
-          maxWidth: '1200px',
-          maxHeight: '800px',
+          width: '95%',
+          height: '95%',
+          maxWidth: '1400px',
+          maxHeight: '900px',
           position: 'relative',
           display: 'flex',
           flexDirection: 'column',
-          borderRadius: '10px',
+          borderRadius: '8px',
           overflow: 'hidden',
-          '&:fullscreen': {
-            width: '100%',
-            height: '100%',
-            maxWidth: '100%',
-            maxHeight: '100%',
-            borderRadius: 0,
-          },
         }}
       >
-        {/* Toolbar */}
+        {/* Header */}
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            p: 1,
+            p: 0.5,
             backgroundColor: '#f5f5f5',
             borderBottom: '1px solid #e0e0e0',
+            minHeight: '40px',
           }}
         >
-          {/* Left controls - Navigation */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={goToPrevPage} disabled={currentSlideIndex <= 0} size="small">
-              <NavigateBeforeIcon />
-            </IconButton>
-            <Typography variant="body2">
-              {displayPageNumber} / {numPages}
-            </Typography>
-            <IconButton onClick={goToNextPage} disabled={currentSlideIndex >= numPages - 1} size="small">
-              <NavigateNextIcon />
-            </IconButton>
-          </Box>
+          {/* Left: Navigation */}
+          {!isPresenting && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <IconButton onClick={goToPrevSlide} disabled={currentSlideIndex <= 0} size="small" title="Previous Slide">
+                <NavigateBeforeIcon />
+              </IconButton>
+              <Typography variant="body2" sx={{ minWidth: '40px', textAlign: 'center' }}>
+                {displayPageNumber} / {totalSlides}
+              </Typography>
+              <IconButton onClick={goToNextSlide} disabled={currentSlideIndex >= totalSlides - 1} size="small" title="Next Slide">
+                <NavigateNextIcon />
+              </IconButton>
+            </Box>
+          )}
 
-          {/* Center controls - Zoom or Presentation controls */}
+          {/* Center: Zoom and Presentation Controls */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Zoom Controls - show in both modes */}
+            <IconButton onClick={zoomOut} disabled={scale <= 0.5} size="small" title="Zoom Out">
+              <ZoomOutIcon />
+            </IconButton>
+            <Typography variant="body2" sx={{ minWidth: '35px', textAlign: 'center', fontSize: '0.75rem' }}>
+              {Math.round(scale * 100)}%
+            </Typography>
+            <IconButton onClick={zoomIn} disabled={scale >= 3.0} size="small" title="Zoom In">
+              <ZoomInIcon />
+            </IconButton>
+
+            {/* Presentation Controls */}
             {isPresenting ? (
               <>
-                <IconButton onClick={togglePlayPause} size="small" title={isPlaying ? 'Pause' : 'Play'}>
+                <IconButton onClick={togglePlayPause} size="small" color="primary" title={isPlaying ? 'Pause' : 'Play'}>
                   {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
                 </IconButton>
-                <Typography variant="body2">{isPlaying ? 'Playing (5s)' : 'Paused'}</Typography>
+                <Typography variant="body2" sx={{ minWidth: '50px', fontSize: '0.7rem' }}>
+                  {isPlaying ? 'Playing' : 'Paused'}
+                </Typography>
               </>
             ) : (
-              <>
-                <IconButton onClick={zoomOut} size="small">
-                  <ZoomOutIcon />
-                </IconButton>
-                <Typography variant="body2">{Math.round(scale * 100)}%</Typography>
-                <IconButton onClick={zoomIn} size="small">
-                  <ZoomInIcon />
-                </IconButton>
-              </>
+              <IconButton onClick={startPresentation} size="small" color="primary" title="Start Presentation">
+                <SlideshowIcon />
+              </IconButton>
             )}
           </Box>
 
-          {/* Right controls - Actions */}
+          {/* Right: Actions */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {isPresenting ? (
-              <IconButton onClick={handleExitPresentation} size="small" title="Exit Presentation">
-                <FullscreenExitIcon />
-              </IconButton>
-            ) : (
+            {/* Actions - only show when not presenting */}
+            {!isPresenting && (
               <>
-                <IconButton onClick={handlePresentation} size="small" title="Present">
-                  <SlideshowIcon />
-                </IconButton>
-                <IconButton onClick={handleDownload} size="small" title="Download">
+                <IconButton onClick={handleDownload} size="small" title="Download PDF">
                   <DownloadIcon />
                 </IconButton>
-                <IconButton onClick={handlePrint} size="small" title="Print">
+                <IconButton onClick={handlePrint} size="small" title="Print All Slides">
                   <PrintIcon />
                 </IconButton>
               </>
             )}
-            <IconButton onClick={handleClose} size="small" title="Close">
+            <IconButton onClick={isPresenting ? stopPresentation : onClose} size="small" title={isPresenting ? "Exit Presentation" : "Close"}>
               <CloseIcon />
             </IconButton>
           </Box>
         </Box>
 
-        {/* SVG Content */}
+        {/* Slide Content */}
         <Box
           sx={{
             flex: 1,
-            overflow: 'auto',
+            overflow: 'auto', // Always allow scrolling for zoomed content
             display: 'flex',
             justifyContent: 'center',
-            alignItems: isPresenting ? 'center' : 'flex-start',
-            backgroundColor: '#525659',
-            p: 2,
+            alignItems: scale > 1 ? 'flex-start' : 'center', // Align to top when zoomed for better scrolling
+            backgroundColor: '#f9f9f9',
+            p: scale > 1 ? 0.5 : 2, // Reduce padding when zoomed
+            minHeight: 0, // Allow flex shrinking
           }}
         >
           {loading ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-              <Typography sx={{ color: '#fff' }}>Loading...</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CircularProgress />
+              <Typography sx={{ ml: 2 }}>Loading slide...</Typography>
             </Box>
-          ) : (
+          ) : currentSlideContent ? (
             <Box
-              ref={svgContainerRef}
+              key={`slide-${currentSlideIndex}-${scale}`} // Force re-render on slide or scale change
               sx={{
-                transform: `scale(${scale})`,
-                transformOrigin: 'top center',
-                transition: 'transform 0.2s ease',
-                width: isPresenting ? '100%' : 'auto',
-                height: isPresenting ? '100%' : 'auto',
+                width: '100%',
+                height: '100%',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-              }}
-            >
-              {(() => {
-                const slideData = getSlideContent();
-                if (!slideData) {
-                  return (
-                    <Typography sx={{ color: '#fff' }}>Slide not found</Typography>
-                  );
+                '& svg': {
+                  width: `${100 * scale}%`,
+                  height: `${100 * scale}%`,
+                  maxWidth: scale > 1 ? `${100 * scale}%` : '100%',
+                  maxHeight: scale > 1 ? `${100 * scale}%` : '100%',
+                  backgroundColor: 'white',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  borderRadius: '4px',
+                  transition: 'all 0.2s ease-in-out',
+                  flexShrink: 0, // Prevent SVG from shrinking
                 }
-                return (
-                  <svg
-                    style={{
-                      width: isPresenting ? '100%' : 'auto',
-                      height: isPresenting ? '100%' : 'auto',
-                      maxWidth: isPresenting ? '100vw' : '100%',
-                      maxHeight: isPresenting ? '100vh' : '70vh',
-                      backgroundColor: 'white',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                    }}
-                    viewBox={slideData.viewBox}
-                    preserveAspectRatio="xMidYMid meet"
-                    dangerouslySetInnerHTML={{ __html: slideData.innerContent }}
-                  />
-                );
-              })()}
-            </Box>
+              }}
+              dangerouslySetInnerHTML={{ __html: currentSlideContent }}
+            />
+          ) : (
+            <Typography>No slides to display</Typography>
           )}
         </Box>
       </Paper>
