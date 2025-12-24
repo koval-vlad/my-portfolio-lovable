@@ -37,11 +37,50 @@ export default function SVGSpriteViewerModal({
   const [scale, setScale] = useState<number>(1.0);
   const [isPresenting, setIsPresenting] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [svgContent, setSvgContent] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
 
   const numPages = slideCount;
   const endIndex = startIndex + slideCount - 1;
+
+  // Fetch and parse SVG sprite
+  useEffect(() => {
+    if (open && svgUrl) {
+      setLoading(true);
+      fetch(svgUrl)
+        .then((res) => res.text())
+        .then((text) => {
+          setSvgContent(text);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error('Failed to load SVG sprite:', err);
+          setLoading(false);
+        });
+    }
+  }, [open, svgUrl]);
+
+  // Extract specific symbol from SVG content
+  const getSlideContent = useCallback(() => {
+    if (!svgContent) return null;
+    
+    const currentSlideId = `${slidePrefix}${pageNumber}`;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+    const symbol = doc.getElementById(currentSlideId);
+    
+    if (!symbol) return null;
+    
+    // Get the viewBox from the symbol
+    const viewBox = symbol.getAttribute('viewBox') || '0 0 1280 720';
+    
+    // Get the inner content of the symbol
+    const innerContent = symbol.innerHTML;
+    
+    return { viewBox, innerContent };
+  }, [svgContent, slidePrefix, pageNumber]);
 
   const goToPrevPage = useCallback(() => {
     setPageNumber((prev) => Math.max(prev - 1, startIndex));
@@ -196,7 +235,6 @@ export default function SVGSpriteViewerModal({
     onClose();
   };
 
-  const currentSlideId = `${slidePrefix}${pageNumber}`;
   const displayPageNumber = pageNumber - startIndex + 1;
 
   return (
@@ -316,34 +354,49 @@ export default function SVGSpriteViewerModal({
             p: 2,
           }}
         >
-          <Box
-            ref={svgContainerRef}
-            sx={{
-              transform: `scale(${scale})`,
-              transformOrigin: 'top center',
-              transition: 'transform 0.2s ease',
-              width: isPresenting ? '100%' : 'auto',
-              height: isPresenting ? '100%' : 'auto',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <svg
-              style={{
+          {loading ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              <Typography sx={{ color: '#fff' }}>Loading...</Typography>
+            </Box>
+          ) : (
+            <Box
+              ref={svgContainerRef}
+              sx={{
+                transform: `scale(${scale})`,
+                transformOrigin: 'top center',
+                transition: 'transform 0.2s ease',
                 width: isPresenting ? '100%' : 'auto',
                 height: isPresenting ? '100%' : 'auto',
-                maxWidth: isPresenting ? '100vw' : '100%',
-                maxHeight: isPresenting ? '100vh' : '70vh',
-                backgroundColor: 'white',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
               }}
-              viewBox="0 0 1280 720"
-              preserveAspectRatio="xMidYMid meet"
             >
-              <use href={`${svgUrl}#${currentSlideId}`} />
-            </svg>
-          </Box>
+              {(() => {
+                const slideData = getSlideContent();
+                if (!slideData) {
+                  return (
+                    <Typography sx={{ color: '#fff' }}>Slide not found</Typography>
+                  );
+                }
+                return (
+                  <svg
+                    style={{
+                      width: isPresenting ? '100%' : 'auto',
+                      height: isPresenting ? '100%' : 'auto',
+                      maxWidth: isPresenting ? '100vw' : '100%',
+                      maxHeight: isPresenting ? '100vh' : '70vh',
+                      backgroundColor: 'white',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                    }}
+                    viewBox={slideData.viewBox}
+                    preserveAspectRatio="xMidYMid meet"
+                    dangerouslySetInnerHTML={{ __html: slideData.innerContent }}
+                  />
+                );
+              })()}
+            </Box>
+          )}
         </Box>
       </Paper>
     </Modal>
