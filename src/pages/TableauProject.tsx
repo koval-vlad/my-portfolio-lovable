@@ -2,7 +2,8 @@ import { Box, Paper, Button } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
-import PDFViewerModal from '../components/PDFViewerModal';
+import SVGSpriteViewerModal from '../components/SVGSpriteViewerModal';
+import hrDashboardSvg from '../assets/hr-dashboard-icons.svg';
 import hrDashboardPdf from '../assets/HR-Dashboard.pdf';
 
 declare global {
@@ -23,7 +24,7 @@ declare global {
 export default function TableauProject() {
   const { id } = useParams<{ id: string }>();
   const projectId = parseInt(id || '1', 10);
-  const [pdfOpen, setPdfOpen] = useState(false);
+  const [presentationOpen, setPresentationOpen] = useState(false);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -46,7 +47,7 @@ export default function TableauProject() {
               variant="outlined"
               size="small"
               startIcon={<SlideshowIcon />}
-              onClick={() => setPdfOpen(true)}
+              onClick={() => setPresentationOpen(true)}
               sx={{ mt: 0 }}
             >
               View Presentation
@@ -60,11 +61,15 @@ export default function TableauProject() {
             toolbar="bottom"
             hide-tabs
           ></tableau-viz>
-          <PDFViewerModal
-            open={pdfOpen}
-            onClose={() => setPdfOpen(false)}
+          <SVGSpriteViewerModal
+            open={presentationOpen}
+            onClose={() => setPresentationOpen(false)}
+            svgUrl={hrDashboardSvg}
             pdfUrl={hrDashboardPdf}
             title="HR Dashboard Presentation"
+            slidePrefix="icon-Slide"
+            slideCount={12}
+            startIndex={1}
           />
         </>
       );
