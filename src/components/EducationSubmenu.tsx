@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import znuLogo from '@/assets/ZNU.svg';
+import educationLogo from '@/assets/education.svg';
 
 interface EducationSubmenuProps {
   onClose: () => void;
@@ -56,8 +56,8 @@ export default function EducationSubmenu({ onClose }: EducationSubmenuProps) {
           }}
         >
           <img
-            src={znuLogo}
-            alt="ZNU Logo"
+            src={educationLogo}
+            alt="Education Logo"
             style={{ width: 40, height: 40, objectFit: 'contain' }}
           />
           <Typography
