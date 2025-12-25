@@ -1,5 +1,6 @@
 import { Box, Paper, Typography } from '@mui/material';
 import usaFlag from '../assets/usa-flag.svg';
+import clsImage from '../assets/1998-Computer-Learning-Center-large.svg';
 
 export default function Certificates() {
   const coursework = [
@@ -67,11 +68,13 @@ export default function Certificates() {
         </Box>
       </Box>
 
-      {/* Image placeholder - replace with actual image when available */}
-      <Box sx={{ width: '100%', backgroundColor: '#f0f0f0', p: 4, textAlign: 'center' }}>
-        <Typography variant="body2" sx={{ color: '#666' }}>
-          [Image: 1998-Computer-Learning-Center-large.svg]
-        </Typography>
+      {/* Computer Learning Center Image */}
+      <Box sx={{ width: '100%' }}>
+        <img
+          src={clsImage}
+          alt="Computer Learning Center"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        />
       </Box>
 
       {/* Coursework Description */}
