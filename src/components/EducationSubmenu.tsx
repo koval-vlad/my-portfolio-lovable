@@ -36,69 +36,21 @@ export default function EducationSubmenu({ onClose }: EducationSubmenuProps) {
         borderRadius: 2,
       }}
     >
-      {/* Left side - ZNU logo and description */}
+      {/* Left side - Education logo only */}
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          maxWidth: 200,
+          alignItems: 'center',
+          justifyContent: 'center',
           pr: 3,
           borderRight: '1px solid #e2e8f0',
         }}
       >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            mb: 2,
-          }}
-        >
-          <img
-            src={educationLogo}
-            alt="Education Logo"
-            style={{ width: 40, height: 40, objectFit: 'contain' }}
-          />
-          <Typography
-            variant="body2"
-            sx={{
-              fontWeight: 500,
-              color: '#64748b',
-              backgroundColor: '#e2e8f0',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 2,
-              fontSize: '0.75rem',
-            }}
-          >
-            Zaporizhzhia National University
-          </Typography>
-        </Box>
-
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 600,
-            color: '#1e293b',
-            mb: 1,
-            fontSize: '1.1rem',
-            lineHeight: 1.3,
-          }}
-        >
-          Education & Professional Development
-        </Typography>
-
-        <Typography
-          variant="body2"
-          sx={{
-            color: '#64748b',
-            fontSize: '0.85rem',
-            lineHeight: 1.5,
-          }}
-        >
-          Academic background and continuous learning through various professional development platforms.
-        </Typography>
+        <img
+          src={educationLogo}
+          alt="Education Logo"
+          style={{ width: 80, height: 80, objectFit: 'contain' }}
+        />
       </Box>
 
       {/* Right side - Two columns */}
