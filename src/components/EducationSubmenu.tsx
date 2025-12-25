@@ -29,9 +29,9 @@ export default function EducationSubmenu({ onClose }: EducationSubmenuProps) {
     <Box
       sx={{
         display: 'flex',
-        gap: 4,
-        p: 3,
-        minWidth: 600,
+        gap: 1,
+        p: 2,
+        minWidth: 400,
         backgroundColor: '#f8fafc',
         borderRadius: 2,
       }}
@@ -42,19 +42,19 @@ export default function EducationSubmenu({ onClose }: EducationSubmenuProps) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          pr: 3,
+          pr: 2,
           borderRight: '1px solid #e2e8f0',
         }}
       >
         <img
           src={educationLogo}
           alt="Education Logo"
-          style={{ width: 80, height: 80, objectFit: 'contain' }}
+          style={{ width: 200, height: 150, objectFit: 'contain' }}
         />
       </Box>
 
       {/* Right side - Two columns */}
-      <Box sx={{ display: 'flex', gap: 6, flex: 1 }}>
+      <Box sx={{ display: 'flex', gap: 4, flex: 1 }}>
         {/* Secondary Education Column */}
         <Box sx={{ minWidth: 150 }}>
           <Typography
