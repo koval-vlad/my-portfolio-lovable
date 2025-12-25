@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import znuLogo from '@/assets/ZNU.svg';
+import znuLogo from '../assets/education.svg';
 
 interface EducationSubmenuProps {
   onClose: () => void;
