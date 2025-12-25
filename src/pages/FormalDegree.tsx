@@ -34,7 +34,7 @@ export default function FormalDegree() {
           borderRadius: '10px',
           backgroundColor: '#fff',
           overflow: 'hidden',
-          maxWidth: '400px',
+          maxWidth: '800px',
           mx: 'auto'
         }}
       >
