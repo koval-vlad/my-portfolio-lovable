@@ -2,10 +2,21 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import Header from './components/Header';
 import Home from './pages/Home';
-import TableauProject from './pages/TableauProject';
-import DotNetProject from './pages/DotNetProject';
-import VBProject from './pages/VBProject';
-import EducationView from './pages/EducationView';
+import ModernHRDashboard from './pages/ModernHRDashboard';
+import HRAnalyticsDashboard from './pages/HRAnalyticsDashboard';
+import TitanicSurvivorStory from './pages/TitanicSurvivorStory';
+import DynamoSoftware from './pages/DynamoSoftware';
+import CRDTradingSystem from './pages/CRDTradingSystem';
+import PortfolioModeler from './pages/PortfolioModeler';
+import IPOModule from './pages/IPOModule';
+import AssetMix from './pages/AssetMix';
+import OrderManager from './pages/OrderManager';
+import GiftWrapMerge from './pages/GiftWrapMerge';
+import GiftCalcs from './pages/GiftCalcs';
+import CorporateWebSite from './pages/CorporateWebSite';
+import HurricaneReport from './pages/HurricaneReport';
+import GiftWrap from './pages/GiftWrap';
+import DatabaseManager from './pages/DatabaseManager';
 import FormalDegree from './pages/FormalDegree';
 import Certificates from './pages/Certificates';
 import Pluralsight from './pages/Pluralsight';
@@ -34,10 +45,21 @@ function App() {
           <Box component="main" sx={{ pt: 2 }}>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/tableau/:id" element={<TableauProject />} />
-              <Route path="/dotnet/:id" element={<DotNetProject />} />
-              <Route path="/vb/:id" element={<VBProject />} />
-              <Route path="/education/view" element={<EducationView />} />
+              <Route path="/tableau/modern-hr-dashboard" element={<ModernHRDashboard />} />
+              <Route path="/tableau/hr-analytics-dashboard" element={<HRAnalyticsDashboard />} />
+              <Route path="/tableau/titanic-survivor-story" element={<TitanicSurvivorStory />} />
+              <Route path="/dotnet/dynamo-software" element={<DynamoSoftware />} />
+              <Route path="/dotnet/crd-trading-system" element={<CRDTradingSystem />} />
+              <Route path="/dotnet/portfolio-modeler" element={<PortfolioModeler />} />
+              <Route path="/dotnet/ipo-module" element={<IPOModule />} />
+              <Route path="/dotnet/asset-mix" element={<AssetMix />} />
+              <Route path="/dotnet/order-manager" element={<OrderManager />} />
+              <Route path="/dotnet/gift-wrap-merge" element={<GiftWrapMerge />} />
+              <Route path="/dotnet/gift-calcs" element={<GiftCalcs />} />
+              <Route path="/vb/corporate-website" element={<CorporateWebSite />} />
+              <Route path="/dotnet/hurricane-report" element={<HurricaneReport />} />
+              <Route path="/vb/gift-wrap" element={<GiftWrap />} />
+              <Route path="/vb/database-manager" element={<DatabaseManager />} />
               <Route path="/education/formal-degree" element={<FormalDegree />} />
               <Route path="/education/certificates" element={<Certificates />} />
               <Route path="/education/pluralsight" element={<Pluralsight />} />
